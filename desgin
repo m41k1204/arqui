@@ -1,0 +1,94 @@
+`timescale 1ns / 1ps
+
+
+module smilingSnail(input number, input clk, input rst, output q, output clkd, input reset_clk);
+
+    
+    parameter S0 = 2'b00;
+    parameter S1 = 2'b01;
+    parameter S2 = 2'b10;
+    parameter S3 = 2'b11;
+    
+    
+    reg [2:0] state, nextstate;
+    
+    wire clkd_wire;
+    clk_divider r(clk, reset_clk, clkd_wire);
+    
+    // state register logic
+    always @(posedge rst, posedge clkd_wire)
+        if (rst) state <= S0;
+        else     state <= nextstate;
+        
+    // transtition logic
+    always @ (*)
+       case (state)
+          S0: if (number) nextstate <= S1;
+              else        nextstate <= S0;
+          S1: if (number) nextstate <= S2;
+              else        nextstate <= S0;
+          S2: if (number) nextstate <= S2;
+              else        nextstate <= S3;
+          S3: if (number) nextstate <= S1;
+              else        nextstate <= S0;
+         default:         nextstate <= S0;
+     endcase
+    
+    assign q = ((state == S3) & number);
+    assign clkd = clkd_wire;
+    
+    
+endmodule
+
+module dff(
+    input D,
+    input clk,
+    input rst,
+    output reg Q
+    );
+ 
+always @ (posedge(clk), posedge(rst))
+begin
+    if (rst)
+        Q <= 1'b0;
+    else
+            Q <= D;
+end
+endmodule
+
+
+
+module clk_divider(
+    input clk,
+    input rst,
+    output led
+    );
+ 
+wire [26:0] din;
+wire [26:0] clkdiv; 
+ 
+dff dff_inst0 (
+    .clk(clk),
+    .rst(rst),
+    .D(din[0]),
+    .Q(clkdiv[0])
+);
+
+genvar i;
+generate
+for (i = 1; i < 26+1; i=i+1) 
+begin : dff_gen_label
+    dff dff_inst (
+        .clk(clkdiv[i-1]),
+        .rst(rst),
+        .D(din[i]),
+        .Q(clkdiv[i])
+    );
+    end
+endgenerate
+
+assign din = ~clkdiv;
+ 
+assign led = clkdiv[26];
+ 
+endmodule
