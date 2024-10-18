@@ -1,0 +1,27 @@
+`timescale 1ns / 1ps
+
+
+module SmilingSnailSimulation();
+
+    reg clk, rst, number;
+    wire q;
+    
+    smilingSnail test(.number(number), .clk(clk), .rst(rst), .q(q));
+    
+    always #5 clk = ~clk;
+    
+    initial begin
+    clk = 1; rst = 1; number = 1; #10
+    rst = 0; number  = 1; #10
+    number = 1; #10
+    number = 1; #10 
+    number = 1; #10
+    number  = 0; #10
+    number = 1; #10
+    number = 1;
+    $finish;
+    
+    end
+
+
+endmodule
